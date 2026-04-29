@@ -1,0 +1,91 @@
+[23:53:03] === M7 gate script start ===
+[23:53:03] === M7 gate: PPO vs PI on thermal_ramp + all_stacked ===
+[23:53:03]   duration=500.0s, taus=[1.0, 10.0, 100.0], disc_noise=7e-04
+[23:53:03]   Loading PPO model from C:\Users\Jack\Documents\Research\WIP\CPTServo\models\ppo_best.zip (device=cpu for fast inference)
+[23:53:04]   === Scenario: thermal_ramp ===
+[00:19:32]     PI wall=1588.1s
+[00:20:58]     PPO loop: 25000/500000 (5%) elapsed=85s eta=1616s
+[00:22:23]     PPO loop: 50000/500000 (10%) elapsed=170s eta=1530s
+[00:23:48]     PPO loop: 75000/500000 (15%) elapsed=255s eta=1445s
+[00:25:14]     PPO loop: 100000/500000 (20%) elapsed=341s eta=1363s
+[00:26:39]     PPO loop: 125000/500000 (25%) elapsed=426s eta=1278s
+[00:28:05]     PPO loop: 150000/500000 (30%) elapsed=512s eta=1195s
+[00:29:31]     PPO loop: 175000/500000 (35%) elapsed=597s eta=1109s
+[00:30:56]     PPO loop: 200000/500000 (40%) elapsed=683s eta=1024s
+[00:32:21]     PPO loop: 225000/500000 (45%) elapsed=768s eta=938s
+[00:33:46]     PPO loop: 250000/500000 (50%) elapsed=853s eta=853s
+[00:35:11]     PPO loop: 275000/500000 (55%) elapsed=938s eta=767s
+[00:36:36]     PPO loop: 300000/500000 (60%) elapsed=1022s eta=682s
+[00:38:01]     PPO loop: 325000/500000 (65%) elapsed=1107s eta=596s
+[00:39:26]     PPO loop: 350000/500000 (70%) elapsed=1192s eta=511s
+[00:40:51]     PPO loop: 375000/500000 (75%) elapsed=1277s eta=426s
+[00:42:16]     PPO loop: 400000/500000 (80%) elapsed=1362s eta=341s
+[00:43:41]     PPO loop: 425000/500000 (85%) elapsed=1447s eta=255s
+[00:45:07]     PPO loop: 450000/500000 (90%) elapsed=1534s eta=170s
+[00:46:32]     PPO loop: 475000/500000 (95%) elapsed=1619s eta=85s
+[00:47:57]     PPO wall=1705.2s
+[00:47:57]     sigma_y(tau=1s):  PI=1.252e-10  PPO=1.049e-09
+[00:47:57]     sigma_y(tau=10s):  PI=4.018e-11  PPO=1.605e-09
+[00:47:57]     sigma_y(tau=100s):  PI=2.271e-11  PPO=2.369e-10
+[00:47:57]   thermal_ramp tau=10s:  PI=4.018e-11  PPO=1.605e-09  speedup=0.025  ppo_wins=False
+[00:47:57]   vs RH-LQR (7.371e-12):  ratio=217.728  matches_lqr_within_50pct=False
+[00:47:57]   === Scenario: all_stacked ===
+[01:14:32]     PI wall=1594.3s
+[01:15:58]     PPO loop: 25000/500000 (5%) elapsed=85s eta=1616s
+[01:17:23]     PPO loop: 50000/500000 (10%) elapsed=170s eta=1530s
+[01:18:48]     PPO loop: 75000/500000 (15%) elapsed=255s eta=1445s
+[01:20:14]     PPO loop: 100000/500000 (20%) elapsed=340s eta=1361s
+[01:21:38]     PPO loop: 125000/500000 (25%) elapsed=425s eta=1276s
+[01:23:03]     PPO loop: 150000/500000 (30%) elapsed=510s eta=1191s
+[01:24:28]     PPO loop: 175000/500000 (35%) elapsed=595s eta=1105s
+[01:25:53]     PPO loop: 200000/500000 (40%) elapsed=680s eta=1020s
+[01:27:18]     PPO loop: 225000/500000 (45%) elapsed=765s eta=935s
+[01:28:43]     PPO loop: 250000/500000 (50%) elapsed=850s eta=850s
+[01:30:09]     PPO loop: 275000/500000 (55%) elapsed=936s eta=766s
+[01:31:35]     PPO loop: 300000/500000 (60%) elapsed=1021s eta=681s
+[01:33:00]     PPO loop: 325000/500000 (65%) elapsed=1106s eta=596s
+[01:34:25]     PPO loop: 350000/500000 (70%) elapsed=1191s eta=511s
+[01:35:50]     PPO loop: 375000/500000 (75%) elapsed=1276s eta=425s
+[01:37:14]     PPO loop: 400000/500000 (80%) elapsed=1361s eta=340s
+[01:38:40]     PPO loop: 425000/500000 (85%) elapsed=1447s eta=255s
+[01:40:06]     PPO loop: 450000/500000 (90%) elapsed=1532s eta=170s
+[01:41:31]     PPO loop: 475000/500000 (95%) elapsed=1617s eta=85s
+[01:42:56]     PPO wall=1703.7s
+[01:42:56]     sigma_y(tau=1s):  PI=1.324e-10  PPO=1.030e-09
+[01:42:56]     sigma_y(tau=10s):  PI=2.927e-11  PPO=4.219e-10
+[01:42:56]     sigma_y(tau=100s):  PI=1.719e-11  PPO=1.229e-10
+[01:42:56]   Running pytest tests/test_ppo_env.py ...
+[01:43:14]   pytest returncode=0
+[01:43:14]   pytest: 9/9 passed
+[01:43:14]   Running ruff check src/ scripts/ ...
+[01:43:15]   [WARN] ruff issues:
+E501 Line too long (110 > 100)
+   --> scripts\m7_ppo_gate.py:269:101
+    |
+267 |                 elapsed = time.perf_counter() - t0
+268 |                 eta = elapsed * (n_dec - k) / k
+269 |                 log(f"    PPO loop: {k}/{n_dec} ({100.0*k/n_dec:.0f}%) elapsed={elapsed:.0f}s eta={eta:.0f}s")
+    |                                                                                                     ^^^^^^^^^^
+270 |             ci_sum = 0.0
+271 |             y_sum = 0.0
+    |
+
+Found 1 error.
+
+[01:43:15]   ruff clean=False
+[01:43:15] === M7 gate verdict ===
+[01:43:15]   thermal_ramp tau=10s:  PI=4.018e-11  PPO=1.605e-09
+[01:43:15]   speedup_at_10s        = 0.025
+[01:43:15]   ppo_wins_tr_10s       = False
+[01:43:15]   ppo_matches_lqr_50pct = False (ratio=217.728)
+[01:43:15]   all_stacked tau=100s: PI=1.719e-11  PPO=1.229e-10
+[01:43:15]   tests_passed          = True (9/9)
+[01:43:15]   ruff_clean            = False
+[01:43:15]   gate_pass             = False
+[01:43:15] Wrote C:\Users\Jack\Documents\Research\WIP\CPTServo\data\gate_M7.json
+[01:43:15] 
+============================================================
+[01:43:15]   M7 GATE FAIL
+[01:43:15]   Primary criterion: PPO sigma_y(10s) <= PI sigma_y(10s) on thermal_ramp
+[01:43:15]   PI=4.018e-11  PPO=1.605e-09  speedup=0.025
+[01:43:15] ============================================================

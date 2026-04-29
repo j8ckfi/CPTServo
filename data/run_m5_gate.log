@@ -1,0 +1,27 @@
+[19:45:16] M5: Receding-Horizon LQR baseline gate
+[19:45:16]   PI  gains: kp=30000.0, ki=3000000.0, dt=0.001
+[19:45:16]   LQR gains: K=[[ 6543.48211064 99942.50132882]], Q=(1000000000000.0, 10000000000.0), R=1.0, dt=0.001
+[19:45:16] 
+  [thermal_ramp] duration=100.0s ...
+[19:45:16]     PI closed-loop ...
+[19:50:52]     wall 334.5 s
+[19:50:52]     RH-LQR closed-loop ...
+[19:56:26]     wall 333.1 s
+[19:56:26]     PI  sigma_y(10s) = 4.403e-11, LQR sigma_y(10s) = 7.371e-12, wins = True
+[19:56:26]     PI  sigma_y(1s)  = 1.641e-10, LQR sigma_y(1s)  = 2.974e-11
+[19:56:26] 
+  [clean pilot probe] duration=30.0s ...
+[19:56:26]     RH-LQR with pilot ...
+[19:58:07]     wall 99.1 s
+[19:58:07]     RH-LQR without pilot ...
+[19:59:52]     wall 104.1 s
+[19:59:52]     pilot suppression = 0.4475 (gate: <0.3), phase = -44.6 deg
+[19:59:52]     LQR sigma_y(1s) clean = 3.821e-11
+[19:59:52] 
+  M5 rhlqr_wins_thermal = True
+[19:59:52]   M5 pilot_gate_pass    = False
+[19:59:52]   M5 gate_pass          = False
+[19:59:52] 
+Wrote C:\Users\Jack\Documents\Research\WIP\CPTServo\data\gate_M5.json
+[19:59:52] Total wall time: 876.4 s
+[19:59:52] GATE FAIL: {'milestone': 'M5', 'Q_diag': [1000000000000.0, 10000000000.0], 'R': 1.0, 'control_dt_s': 0.001, 'rf_limit_Hz': 1000.0, 'lqr_gain_K': [6543.482110644564, 99942.5013288173], 'pi_sigma_y_10s_thermal': 4.403066602955274e-11, 'rhlqr_sigma_y_10s_thermal': 7.370847928259346e-12, 'rhlqr_wins_on_thermal_at_tau10s': True, 'pi_sigma_y_1s_thermal': 1.6413523745362143e-10, 'rhlqr_sigma_y_1s_thermal': 2.974498957756356e-11, 'rhlqr_sigma_y_1s_clean': 3.8213397627384854e-11, 'rhlqr_pilot_suppression': 0.4475150151167066, 'rhlqr_pilot_phase_deg': -44.604364811000266, 'pilot_gate_pass': False, 'tests_passed': True, 'n_tests_passed': 11, 'ruff_clean': True, 'gate_pass': False}

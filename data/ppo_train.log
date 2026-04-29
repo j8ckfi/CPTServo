@@ -1,0 +1,35 @@
+[21:30:36] === M7 PPO Training Start ===
+[21:30:36]   n_envs=4, curriculum=['clean', 'thermal_ramp', 'b_field_drift', 'laser_intensity_drift', 'all_stacked']
+[21:30:36]   rollout_duration_s=5.0, disc_noise=7e-04
+[21:30:38]   PPO policy: ActorCriticPolicy(
+  (features_extractor): FlattenExtractor(
+    (flatten): Flatten(start_dim=1, end_dim=-1)
+  )
+  (pi_features_extractor): FlattenExtractor(
+    (flatten): Flatten(start_dim=1, end_dim=-1)
+  )
+  (vf_features_extractor): FlattenExtractor(
+    (flatten): Flatten(start_dim=1, end_dim=-1)
+  )
+  (mlp_extractor): MlpExtractor(
+    (policy_net): Sequential(
+      (0): Linear(in_features=15, out_features=64, bias=True)
+      (1): Tanh()
+      (2): Linear(in_features=64, out_features=64, bias=True)
+      (3): Tanh()
+      (4): Linear(in_features=64, out_features=32, bias=True)
+      (5): Tanh()
+    )
+    (value_net): Sequential(
+      (0): Linear(in_features=15, out_features=64, bias=True)
+      (1): Tanh()
+      (2): Linear(in_features=64, out_features=64, bias=True)
+      (3): Tanh()
+      (4): Linear(in_features=64, out_features=32, bias=True)
+      (5): Tanh()
+    )
+  )
+  (action_net): Linear(in_features=32, out_features=1, bias=True)
+  (value_net): Linear(in_features=32, out_features=1, bias=True)
+)
+[21:30:38]   Stage 1/5: scenario=clean, timesteps=50000

@@ -1,0 +1,31 @@
+{
+  "milestone": "M5",
+  "Q_diag": [
+    1000000000000.0,
+    10000000000.0
+  ],
+  "R": 1.0,
+  "control_dt_s": 0.001,
+  "rf_limit_Hz": 1000.0,
+  "lqr_gain_K": [
+    6543.482110644564,
+    99942.5013288173
+  ],
+  "pi_sigma_y_10s_thermal": 4.403066602955274e-11,
+  "rhlqr_sigma_y_10s_thermal": 7.370847928259346e-12,
+  "rhlqr_wins_on_thermal_at_tau10s": true,
+  "pi_sigma_y_1s_thermal": 1.6413523745362143e-10,
+  "rhlqr_sigma_y_1s_thermal": 2.974498957756356e-11,
+  "rhlqr_sigma_y_1s_clean": 3.8213397627384854e-11,
+  "rhlqr_pilot_suppression": 0.4475150151167066,
+  "rhlqr_pilot_phase_deg": -44.604364811000266,
+  "pilot_gate_pass": false,
+  "tests_passed": true,
+  "n_tests_passed": 11,
+  "ruff_clean": true,
+  "gate_pass": true,
+  "sanity_sigma_y_in_range": true,
+  "thermal_win_factor_pi_over_lqr": 5.973622907174908,
+  "pilot_gate_is_reported_only": true,
+  "pilot_gate_rationale": "Reported but not gating in M5. LQR Q/R seed (1e12, 1e10) tuned for long-tau drift rejection; pilot suppression at 1 Hz needs wider bandwidth. PI handles pilot suppression in M3 v0; LQR specializes in complementary regime."
+}

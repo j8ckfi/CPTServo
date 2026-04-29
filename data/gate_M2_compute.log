@@ -1,0 +1,7 @@
+[19:30:04] Timing single OBE point...
+[19:30:05] Single OBE point: 0.214 s
+[19:30:05] Grid: 10x10x5x5x5 = 12500 points; estimated serial: 2680 s
+[19:30:05] Estimated serial > 60 s; using 8 workers.
+[19:30:05] Computing OBE surface -> C:\Users\Jack\Documents\Research\WIP\CPTServo\data\obe_surface.h5
+[19:47:01] OBE surface done in 1016.1 s wall.
+[19:47:01] Running calibration fit...

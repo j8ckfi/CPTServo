@@ -1,0 +1,46 @@
+[19:00:07] torch 2.4.1+cu124, cuda: True
+[19:00:07] Throughput sweep:
+  device=cpu B=   1: rt=  0.387x  batched=      0.4 sample-s/wall-s
+  device=cpu B=  64: rt=  0.373x  batched=     23.8 sample-s/wall-s
+  device=cpu B=1024: rt=  0.258x  batched=    264.7 sample-s/wall-s
+  device=cuda B=   1: rt=  0.073x  batched=      0.1 sample-s/wall-s
+  device=cuda B=  64: rt=  0.071x  batched=      4.5 sample-s/wall-s
+  device=cuda B=1024: rt=  0.068x  batched=     69.8 sample-s/wall-s
+[19:00:34] Best batched throughput: 264.7 sample-s/wall-s @ device=cpu, B=1024
+[19:00:34] Generating 100 s clean disturbance trace (1000000 samples)...
+[19:00:34] Loading disturbance into (1000000, 3) torch tensor...
+[19:00:34] Running 100 s open-loop simulation...
+[19:00:47]   step 5000/100000 (5%, 13.0 s wall)
+[19:01:00]   step 10000/100000 (10%, 26.1 s wall)
+[19:01:13]   step 15000/100000 (15%, 39.1 s wall)
+[19:01:26]   step 20000/100000 (20%, 52.2 s wall)
+[19:01:39]   step 25000/100000 (25%, 65.5 s wall)
+[19:01:52]   step 30000/100000 (30%, 78.6 s wall)
+[19:02:05]   step 35000/100000 (35%, 91.7 s wall)
+[19:02:19]   step 40000/100000 (40%, 104.9 s wall)
+[19:02:32]   step 45000/100000 (45%, 118.0 s wall)
+[19:02:45]   step 50000/100000 (50%, 131.2 s wall)
+[19:02:58]   step 55000/100000 (55%, 144.2 s wall)
+[19:03:11]   step 60000/100000 (60%, 157.4 s wall)
+[19:03:24]   step 65000/100000 (65%, 170.5 s wall)
+[19:03:37]   step 70000/100000 (70%, 183.6 s wall)
+[19:03:50]   step 75000/100000 (75%, 196.6 s wall)
+[19:04:04]   step 80000/100000 (80%, 209.8 s wall)
+[19:04:17]   step 85000/100000 (85%, 222.9 s wall)
+[19:04:30]   step 90000/100000 (90%, 235.9 s wall)
+[19:04:43]   step 95000/100000 (95%, 249.0 s wall)
+[19:04:56]   step 100000/100000 (100%, 262.1 s wall)
+[19:04:56] Simulation done in 262.1 s wall.
+[19:04:56] sigma_y(1 s) = 1.336e-14
+[19:04:56] white-FM floor(1 s) = 2.121e-11
+[19:04:56] ratio = 0.001
+Traceback (most recent call last):
+  File "C:\Users\Jack\Documents\Research\WIP\CPTServo\scripts\measure_m1_gate.py", line 231, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\Jack\Documents\Research\WIP\CPTServo\scripts\measure_m1_gate.py", line 180, in main
+    litscan = json.loads(litscan_path.read_text(encoding="utf-8"))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jack\AppData\Local\Programs\Python\Python311\Lib\json\__init__.py", line 335, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)

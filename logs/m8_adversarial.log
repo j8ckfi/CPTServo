@@ -1,0 +1,39 @@
+[01:55:36] === M8 Adversarial Battery start ===
+[01:55:36]   duration=200.0s, eval_tau=10.0s, disc_noise_nominal=7.0e-04
+[01:55:36]   reality_gap_frac=+/-5%
+[01:55:36]   --- Probe: baseline_thermal_ramp ---
+[02:06:52]     PI:    sigma_y(1s)=6.878e-11  sigma_y(10s)=2.261e-11  wall=675.9s
+[02:18:08]     LQR:   sigma_y(1s)=4.554e-11  sigma_y(10s)=1.155e-11  wall=675.5s
+[02:18:08]     speedup_LQR_over_PI(10s) = 1.959  lqr_wins=True
+[02:18:08]   --- Probe: ood_3x_thermal_slope ---
+[02:29:21]     PI:    sigma_y(1s)=8.354e-11  sigma_y(10s)=2.489e-11  wall=673.6s
+[02:40:35]     LQR:   sigma_y(1s)=5.927e-11  sigma_y(10s)=1.782e-11  wall=673.5s
+[02:40:35]     speedup_LQR_over_PI(10s) = 1.397  lqr_wins=True
+[02:40:35]   --- Probe: high_disc_noise_3x ---
+[02:51:49]     PI:    sigma_y(1s)=9.979e-11  sigma_y(10s)=3.680e-11  wall=674.6s
+[03:03:04]     LQR:   sigma_y(1s)=1.018e-10  sigma_y(10s)=2.981e-11  wall=674.5s
+[03:03:04]     speedup_LQR_over_PI(10s) = 1.234  lqr_wins=True
+[03:03:04]   --- Probe: low_disc_noise_third ---
+[03:14:18]     PI:    sigma_y(1s)=6.376e-11  sigma_y(10s)=2.194e-11  wall=674.0s
+[03:25:30]     LQR:   sigma_y(1s)=3.243e-11  sigma_y(10s)=7.956e-12  wall=672.4s
+[03:25:30]     speedup_LQR_over_PI(10s) = 2.757  lqr_wins=True
+[03:25:30]   --- Probe: reality_gap_5pct ---
+[03:36:43]     PI:    sigma_y(1s)=6.878e-11  sigma_y(10s)=2.261e-11  wall=672.9s
+[03:47:57]     LQR:   sigma_y(1s)=4.554e-11  sigma_y(10s)=1.155e-11  wall=673.5s
+[03:47:57]     speedup_LQR_over_PI(10s) = 1.959  lqr_wins=True
+[03:47:57]   --- Probe: worst_case_2x_stacked ---
+[03:59:09]     PI:    sigma_y(1s)=6.794e-11  sigma_y(10s)=3.282e-11  wall=672.4s
+[04:10:23]     LQR:   sigma_y(1s)=4.572e-11  sigma_y(10s)=1.716e-11  wall=673.7s
+[04:10:23]     speedup_LQR_over_PI(10s) = 1.913  lqr_wins=True
+[04:10:23] === M8 Battery summary ===
+[04:10:23]   ood_3x_thermal_slope              speedup=1.397  lqr_wins=True
+[04:10:23]   high_disc_noise_3x                speedup=1.234  lqr_wins=True
+[04:10:23]   low_disc_noise_third              speedup=2.757  lqr_wins=True
+[04:10:23]   reality_gap_5pct                  speedup=1.959  lqr_wins=True
+[04:10:23]   worst_case_2x_stacked             speedup=1.913  lqr_wins=True
+[04:10:23]   LQR wins on 5/5 probes
+[04:10:23]   Reality-gap speedup=1.959, positive>5%=True
+[04:10:23]   gate_pass = True (FULL HEADLINE PRESERVED)
+[04:10:23] Wrote C:\Users\Jack\Documents\Research\WIP\CPTServo\data\gate_M8.json
+[04:10:23] Wrote C:\Users\Jack\Documents\Research\WIP\CPTServo\tests\adversarial\REPORT.md
+[04:10:23] === M8 complete: total_wall=8087.1s ===

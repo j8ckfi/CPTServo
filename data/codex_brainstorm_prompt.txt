@@ -1,0 +1,36 @@
+Brainstorm session — read the prior critic review (it was done by a Claude critic agent; you should now adversarially refine and extend it). The project is CPTServo at C:\Users\Jack\Documents\Research\WIP\CPTServo — a learned servo for a chip-scale CPT-Rb87 atomic clock benchmarked against PI/RH-LQR baselines for an "RL for atomic clocks & Allan curves" cold-email pitch to Mesa Quantum.
+
+Read these files for state:
+- scripts/run_m3_m4_gates.py (especially run_fast_loop)
+- src/cptservo/twin/reduced.py (especially fractional_frequency_error_with_B and step)
+- src/cptservo/baselines/pi.py (note kp/ki docstring vs code contradiction)
+- configs/v1_recipe.yaml (noise_budget block)
+- data/published_allan.json
+- data/gate_M3.json (last failed run)
+- data/m3_smoke.log (latest result: ratios 1.72/1.73/1.38 — passes 2x by virtue of post-loop curve-fit)
+
+Prior Claude critic review concluded:
+1. v5 (white-FM noise on y directly) is FUDGE — bypasses loop dynamics, RL-vs-PI would be indistinguishable at long tau.
+2. PI gains kp=1000 ki=50000 contradict docstring kp=1.0 ki=10.0 (1000x discrepancy). Loop unity-gain is 0.19 Hz — anomalously slow.
+3. Noise budget 6.86e-11/sqrt(Hz) reverse-engineered to land sigma_y(1s) ≈ 4e-11; corresponds to L(1Hz) ≈ -10 dBc/Hz which is dirty-VCO territory, not CSAC.
+4. Recommendation: reframe M3 to "1/sqrt(tau) + within order-of-magnitude" instead of strict 2x; move LO noise INSIDE the loop (in delta_bloch), not on rf_corr or y; fix PI gain documentation; re-run.
+
+Your job NOW: adversarial brainstorm. The user wants you to engage in back-and-forth on three concrete questions:
+
+Q1. **In-loop LO noise injection mechanism** — propose 2-3 concrete code-level architectures for injecting LO white-FM noise INSIDE the closed loop in run_fast_loop / step():
+   (a) Add LO_noise_Hz to delta_bloch directly in step() (line 283 of reduced.py)
+   (b) Add LO_noise_Hz to the rf_detuning argument BEFORE the loop sees it (i.e., make controls[:,1] = rf_corr_cmd + LO_noise so the discriminator sees the noisy reference and tries to track it)
+   (c) Modify the discriminator readout (ci) to include shot noise propagated through the photodetector → lock-in chain (full-fidelity, slow)
+   For each: physical justification, implementation complexity, expected sigma_y(tau) shape, RL-vs-PI distinguishability.
+
+Q2. **PI gain reconciliation** — given the M2 OBE discriminator slope of ~2.4e-5 ci/Hz, what's the right kp range? With control_dt=0.001 (1 kHz), what ki produces a 10-100 Hz servo bandwidth (typical CSAC)? Should we re-tune from scratch? Should the noise injection be done at a particular loop point that interacts predictably with these gains?
+
+Q3. **M3 reframing — concrete success criteria** — propose explicit numeric thresholds for the reframed M3 gate:
+   - Short-tau scaling: e.g., "fit log-log slope of sigma_y(tau in {1,3,10}) is in [-0.7, -0.3]"
+   - Order-of-magnitude vs Kitching: e.g., "sigma_y(1s) in [4e-12, 4e-10]"
+   - Anything else that distinguishes a real twin from a curve-fit
+   The goal: a gate that v5 (post-loop fudge) clearly FAILS but a properly-architected in-loop simulation cleanly PASSES, even if absolute values are 2-5x off Kitching.
+
+Be opinionated. The user wants concrete recommendations they can act on, not a survey of options. End each section with: "RECOMMEND: <option>, REASON: <one sentence>".
+
+This is a multi-turn dialog so don't try to wrap up — surface uncertainties for follow-up questions. Output ~1500 words. Cite line numbers in source files.

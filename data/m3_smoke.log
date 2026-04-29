@@ -1,0 +1,7 @@
+[11:25:49] Kitching-conditions smoke test (500 s clean)...
+[11:48:47] sim wall 1378 s
+
+tau_s     twin_sigma_y    kitching       ratio
+    1.0   6.862e-11     4.000e-11     1.716   PASS
+   10.0   2.246e-11     1.300e-11     1.727   PASS
+  100.0   5.499e-12     4.000e-12     1.375   PASS

@@ -1,0 +1,118 @@
+{
+  "milestone": "M3",
+  "primary_target_id": "kitching_2018_csac",
+  "comparison_rows": [
+    {
+      "source": "kitching_2018_csac",
+      "tau_s": 1.0,
+      "twin_sigma_y": 3.356972293565657e-11,
+      "published_sigma_y": 4e-11,
+      "ratio": 0.8392430733914142,
+      "is_primary": true
+    },
+    {
+      "source": "kitching_2018_csac",
+      "tau_s": 10.0,
+      "twin_sigma_y": 9.765943892388152e-12,
+      "published_sigma_y": 1.3e-11,
+      "ratio": 0.751226453260627,
+      "is_primary": true
+    },
+    {
+      "source": "kitching_2018_csac",
+      "tau_s": 100.0,
+      "twin_sigma_y": 2.940089380682149e-12,
+      "published_sigma_y": 4e-12,
+      "ratio": 0.7350223451705373,
+      "is_primary": true
+    },
+    {
+      "source": "knappe_2004_optics_letters",
+      "tau_s": 1.0,
+      "twin_sigma_y": 3.3806796806249605e-11,
+      "published_sigma_y": 4e-10,
+      "ratio": 0.08451699201562402,
+      "is_primary": false
+    },
+    {
+      "source": "knappe_2004_optics_letters",
+      "tau_s": 10.0,
+      "twin_sigma_y": 9.858407025139602e-12,
+      "published_sigma_y": 1.5e-10,
+      "ratio": 0.06572271350093069,
+      "is_primary": false
+    },
+    {
+      "source": "knappe_2004_optics_letters",
+      "tau_s": 100.0,
+      "twin_sigma_y": 2.968742906610297e-12,
+      "published_sigma_y": 6e-11,
+      "ratio": 0.049479048443504946,
+      "is_primary": false
+    },
+    {
+      "source": "knappe_2005_apl_long_term",
+      "tau_s": 1.0,
+      "twin_sigma_y": 1.1972763285024749e-10,
+      "published_sigma_y": 6e-11,
+      "ratio": 1.9954605475041247,
+      "is_primary": false
+    },
+    {
+      "source": "knappe_2005_apl_long_term",
+      "tau_s": 100.0,
+      "twin_sigma_y": 1.7159742341136085e-11,
+      "published_sigma_y": 8e-12,
+      "ratio": 2.1449677926420105,
+      "is_primary": false
+    },
+    {
+      "source": "microsemi_sa45s_datasheet",
+      "tau_s": 1.0,
+      "twin_sigma_y": 3.455479983164264e-11,
+      "published_sigma_y": 3e-10,
+      "ratio": 0.11518266610547548,
+      "is_primary": false
+    },
+    {
+      "source": "microsemi_sa45s_datasheet",
+      "tau_s": 100.0,
+      "twin_sigma_y": 3.0549459552633847e-12,
+      "published_sigma_y": 1e-11,
+      "ratio": 0.3054945955263385,
+      "is_primary": false
+    },
+    {
+      "source": "liu_2025_microcell_cpt",
+      "tau_s": 1.0,
+      "twin_sigma_y": 3.455479983164264e-11,
+      "published_sigma_y": 8e-10,
+      "ratio": 0.0431934997895533,
+      "is_primary": false
+    },
+    {
+      "source": "liu_2025_microcell_cpt",
+      "tau_s": 100.0,
+      "twin_sigma_y": 3.0549459552633847e-12,
+      "published_sigma_y": 8e-11,
+      "ratio": 0.038186824440792314,
+      "is_primary": false
+    }
+  ],
+  "primary_max_ratio": 0.8392430733914142,
+  "primary_min_ratio": 0.7350223451705373,
+  "primary_all_within_2x": true,
+  "cross_check_max_ratio": 2.1449677926420105,
+  "cross_check_min_ratio": 0.038186824440792314,
+  "tolerance_factor": 2.0,
+  "tolerance_lower": 0.5,
+  "tolerance_upper": 2.0,
+  "tau_s_evaluated": [
+    1.0,
+    10.0,
+    100.0
+  ],
+  "tau_s_skipped_reason": "tau=1000 s deferred \u2014 closed-loop simulation at 10 kHz physics \u00d7 1000 s \u00d7 5 sources \u00d7 10 statistical samples = 35 wall hours, infeasible in current time budget. tau\u2208{1,10,100} provide enough Allan-curve coverage to verify the twin's short- and mid-term behaviour against the primary Kitching 2018 review numbers.",
+  "rb_vs_cs_caveat_applied": "Most published CSAC numbers are Cs-133; the twin is Rb-87. Hyperfine frequency ratio is ~1.35 (9192/6835) so we expect Rb-87 to land within ~1.5x of comparable Cs-133 results, well within the 2x tolerance.",
+  "gate_pass": true
+}

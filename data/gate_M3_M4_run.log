@@ -1,0 +1,30 @@
+[06:15:55] Running M4 PI-baseline gate
+[06:15:55] M4: PI baseline gate
+[06:15:55]   PI gains: kp=1000.0, ki=50000.0, dt=0.001
+[06:15:55]   open-loop run (100.0 s)...
+[06:20:27]     wall 270.3 s
+[06:20:27]   PI-closed-loop run (100.0 s)...
+[06:24:58]     wall 270.2 s
+[06:24:58]   open sigma_y(1s) = 1.706e-13, PI sigma_y(1s) = 3.068e-11, ratio_pi/open = 179.820, ratio_pi/floor = 1.446
+[06:24:58]   M4 gate_pass = False
+[06:24:58] Wrote C:\Users\Jack\Documents\Research\WIP\CPTServo\data\gate_M4.json (gate_pass=False)
+[06:24:58] Running M3 calibration audit
+[06:24:58] M3: public-data calibration audit
+[06:24:58]   source=kitching_2018_csac, T=360.0K, P=100.0Torr, recipe=clean
+[06:24:58]     closed-loop (1000.0 s)...
+[07:10:09]     wall 2709.2 s
+[07:10:09]   source=knappe_2004_optics_letters, T=353.0K, P=25.0Torr, recipe=clean
+[07:10:09]     closed-loop (1000.0 s)...
+[07:55:25]     wall 2713.5 s
+[07:55:25]   source=knappe_2005_apl_long_term, T=353.0K, P=100.0Torr, recipe=thermal_ramp
+[07:55:25]     closed-loop (1000.0 s)...
+[08:40:42]     wall 2715.1 s
+[08:40:42]   source=microsemi_sa45s_datasheet, T=333.15K, P=25.0Torr, recipe=clean
+[08:40:42]     closed-loop (1000.0 s)...
+[09:26:05]     wall 2721.4 s
+[09:26:05]   source=liu_2025_microcell_cpt, T=333.15K, P=25.0Torr, recipe=clean
+[09:26:05]     closed-loop (1000.0 s)...
+[10:11:26]     wall 2719.4 s
+[10:11:26]   primary ratios: [0.9142945067246182, 0.27791891831524956, 0.09004215414730368] -> within_2x=False; M3 gate_pass = False
+[10:11:27] Wrote C:\Users\Jack\Documents\Research\WIP\CPTServo\data\gate_M3.json (gate_pass=False)
+[10:11:27] Wrote M3_FAILURE_PIVOT.md (HARD KILL surfaced)

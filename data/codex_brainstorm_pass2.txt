@@ -1,0 +1,40 @@
+Round 2. Your Q1/Q2/Q3 recommendations are accepted in principle. Now the project-context questions before I commit to the refactor:
+
+**Q4 — Compute budget reality check**: each full M3 audit (5 sources × 1000s closed-loop sim at 10 kHz physics, CPU B=1, ~0.37x realtime) takes ~3.5 hours wall. We've now done 6 such runs across iterations. Before another full audit, can we define a "fast M3 v0" smoke test that exercises ALL FOUR of your reframed criteria on Kitching conditions ONLY in <30 minutes wall? Specifically: 100-300s sim, all four gate checks (Allan plausibility, slope, pilot probe, controller sensitivity). If v0 passes, run full 5-source audit. If v0 fails, debug locally before committing to 3.5 hrs.
+
+**Q5 — Decimation-window y averaging**: you said y should record decimation-window average RF rather than one aliased sample. Currently the inner loop is:
+```
+ci_sum = 0
+for j in range(decimation):
+    state = twin.step(state, ctrl, dist_tensor[idx], dt)
+    ci_sum += state[0, 6].item()
+error = ci_sum / decimation
+# ... compute y once after the inner loop, using rf_corr from start ...
+```
+For option (b), if I generate per-physics-step lo_noise (10 kHz) and the controller updates at 1 kHz, the rf_actual within the decimation window is `rf_cmd + lo_noise[idx]` varying per substep. Should I:
+  (a) accumulate rf_actual_sum during the inner loop, divide by decimation, use that for y?
+  (b) just record rf_actual at the LAST substep (current code style — aliasing)?
+  (c) record rf_actual at every substep, then compute y at every substep, then decimate by averaging y?
+Option (c) is most physically correct (true window average of fractional frequency error). Cost: 10x more y-computations per decimation step. On CPU this might be tolerable.
+
+**Q6 — Pilot probe implementation specifics**: 1 Hz sinusoid at amplitude 10 Hz on rf_actual. To measure "open-loop error pilot SNR > 15 dB" and "closed-loop y pilot amplitude < 0.3x open-loop":
+  - Need duration ~ 100s (100 pilot cycles → reasonable SNR estimate via FFT bin)
+  - Compute |FFT(error_signal)|² at 1 Hz vs noise floor in nearby bins → SNR estimate
+  - Compute |FFT(y_closed)|² at 1 Hz vs |FFT(y_open)|² at 1 Hz → suppression ratio
+  - Phase: arctan2(im(FFT(rf_cmd)[1Hz]), re(FFT(rf_cmd)[1Hz])) - phase(FFT(open_loop_error)[1Hz])
+Are these the right specifics? Any pitfalls (windowing, leakage, etc) at 1 Hz with 100s of 1 kHz data?
+
+**Q7 — PI retune procedure**: with option (b) injection active, sweeping kp ∈ {1e3, 1e4, 3e4, 1e5} and ki ∈ {1e6, 3e6, 1e7} on 100s clean sim. Pick (kp, ki) that minimizes σ_y(τ=10s) subject to:
+  - Loop stays stable (no σ_y blow-up)
+  - σ_y(τ=1s) within 5x of theoretical white-FM floor
+  - rf_cmd doesn't saturate
+Is this the right objective? Or should I tune to a step-response criterion (e.g., 1 Hz disturbance suppression > 20 dB) instead? The latter is more textbook but the former is closer to what I actually care about (Allan deviation).
+
+**Q8 — Anti-windup gating**: recipe defines `actuator_bounds.rf_detuning_max_Hz: 1.0e3`. Current PIController accumulates integral without clamping. Two options:
+  (a) Clamp `_integral` so that `kp*error + ki*_integral` <= actuator bound
+  (b) Just clamp `rf_corr` output (saturation) but let integrator wind up
+For M3, where lock should hold continuously and integrator never saturates if model is well-behaved, does this matter? If yes (a) is the textbook anti-windup. If we're going to ship RL/RH-LQR as M5/M6, that's where anti-windup actually matters.
+
+**Q9 — Final architectural commitment**: given Q4–Q8, propose the EXACT minimal patch sequence to land an M3-passing artifact. Order of operations, expected wall time per step, fail/back-out criteria. The user wants a concrete to-do list, not options. Constraints: this is solo work on one CPU, total budget for M3 closure is ~6 wall hours from now.
+
+Be opinionated. End each section with RECOMMEND and REASON as before.

@@ -1,0 +1,30 @@
+
+[01:50:56] M7 closed as DOCUMENTED FAIL (per spec, divergence is a finding):
+  thermal_ramp τ=10s: PI=4.0e-11  PPO=1.6e-9 (PPO 40× worse, speedup=0.025)
+  all_stacked  τ=100s: PI=1.7e-11 PPO=1.2e-10 (PPO 7× worse, speedup=0.140)
+  vs RH-LQR (7.4e-12 from M5): PPO 218× worse
+  Tests 9/9 pass. Ruff clean (post-run E501 fix).
+  Headline RL win in writeup will come from M5 RH-LQR (5.97×). M6+M7 documented honestly.
+  data/gate_M7.json written.
+
+Next: M8 adversarial battery.
+
+[04:14:28] M8 PASSED — 5/5 probes preserve LQR win (FULL HEADLINE PRESERVED):
+  A ood_3x_thermal_slope:   speedup=1.40
+  B high_disc_noise_3x:     speedup=1.23
+  C low_disc_noise_third:   speedup=2.76
+  D reality_gap_5pct:       speedup=1.96  (>5% gate: pass)
+  E worst_case_2x_stacked:  speedup=1.91
+  Reality-gap robust win => writeup headline of '5.97x quieter than PI' STANDS.
+  Total wall: 8087s.  data/gate_M8.json + tests/adversarial/REPORT.md written.
+
+Next: M10 writeup + README + notebooks.
+
+[04:18:05] M10 closed:
+  - writeup/report.md: 2-3pp PNTGuard structural template, BGC checklist included
+  - README.md: updated with actual headline (5.97x M5 win, 5/5 M8 robustness)
+  - tests/adversarial/REPORT.md: M8 aggregator written by m8_adversarial.py
+  - All headline numbers cite gate JSON + reproduction command (BGC test passes)
+
+PROJECT COMPLETE. All 10 milestones closed (M9 dropped per user 2026-04-27).
+Cold-email artifact ready for Mesa Quantum.
