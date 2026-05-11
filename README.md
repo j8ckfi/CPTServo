@@ -21,6 +21,30 @@ The promoted controller is at `models/cfc_residual_m11_promoted.json` and
 ships with a self-contained C reference implementation in `c_export/` that
 matches the Python policy bit-for-bit across 2006 test sequences.
 
+## A short primer for non-clock people
+
+A chip-scale CPT-Rb87 clock is a tiny atomic frequency reference: a
+millimeter-scale rubidium vapor cell, a single laser modulated near 6.835 GHz,
+and a photodiode.  When the laser sidebands hit the rubidium hyperfine
+resonance exactly, the atoms go transparent; a lock-in detector turns that
+transparency dip into an error signal whose slope tells the controller which
+way to nudge the local oscillator's RF frequency to stay on resonance.  The
+servo this project benchmarks is that lock loop.
+
+The metric the loop gets graded on is sigma_y(tau), the Allan deviation of
+fractional frequency error at integration time tau.  Lower is better; it's
+the standard way to compare clock stability.  Numbers in this README are at
+tau = 10 s, which is the window where thermal disturbances dominate on a
+chip-scale clock and where the published-data record is densest.
+
+A "disturbance recipe" is a perturbation profile applied during a run.
+`thermal_ramp` is the nominal benchmark, a package-temperature sinusoid that
+drives buffer-gas-shift errors.  The adversarial scenarios scale that up
+(3x and 4x slope), inject extra discriminator noise (3x and 1/3x), perturb
+four calibrated twin coefficients by 5% to simulate sim-to-real miscalibration,
+and stack 2x magnetic-field and laser-intensity drift on top of the thermal
+ramp.  All scenarios share the same 100-second integration window.
+
 ## What's in the repo
 
 | Step | Result |
@@ -126,6 +150,22 @@ Peak RF excursion across all scenarios is 165 Hz against a 950 Hz actuator
 limit.  That's a 3.3% nominal improvement over the DLQR with no robustness
 regression on any tested scenario, in a controller that structurally cannot
 regress below the DLQR even if the learned coefficients are wrong.
+
+## What this benchmark does not claim
+
+The twin is calibrated to published-data Allan curves (Kitching 2018 and
+related sources), not validated against a physical instrument.  The
+controller and benchmark are software-only.  There are no hardware-in-the-loop
+tests in this repo, and the C export has not been run on real silicon.  The
+residual-clip architecture is verified to work on this benchmark family; the
+question of whether the same trick transfers to other learned-control
+problems with similar structure is open.
+
+The reduced-order twin makes a uniform-discriminator-slope assumption that
+the tier-1 OBE simulation does not.  The OBE-to-reduced fit leaves 35.8%
+slope variation on the table, documented in `data/gate_M2.json` rather than
+hidden inside a tighter fit.  Sim-to-real results on a real clock will land
+somewhere in that gap.
 
 ## Reproduction
 
