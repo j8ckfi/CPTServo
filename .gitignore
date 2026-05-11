@@ -1,9 +1,44 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
 *.egg-info/
+build/
+dist/
+
+# Tooling caches
 .pytest_cache/
 .ruff_cache/
-*.h5
-*.parquet
-notebooks/figs/
+.mypy_cache/
 .ipynb_checkpoints/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code / oh-my-claudecode session state
+.omc/
+.omx/
+.claude/
+
+# Notebook outputs
+notebooks/figs/
+*.ipynb_checkpoints
+
+# Local-only archive of negative-result and superseded artifacts.  Kept on
+# disk for reference; not part of the published surface.
+archive/
+
+# Local compiler toolchains downloaded for c_export/ verification (TCC, etc.)
+tools/
+
+# Logs and temporary state
+logs/
+*.log
+
+# Compiled C artifacts produced by c_export/Makefile
+c_export/test_residual
+c_export/test_residual.exe
+c_export/*.o

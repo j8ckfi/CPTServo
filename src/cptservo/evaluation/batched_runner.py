@@ -85,6 +85,7 @@ def run_batched_loop(
     pilot_amp_Hz: float = 0.0,
     lo_noise_scale: float = 1.0,
     disc_noise_amp_ci: float = 7.0e-4,
+    shared_noise_across_batch: bool = False,
     autograd: bool = False,
     truncation_window: int = 200,
 ) -> dict[str, Any]:
@@ -117,6 +118,9 @@ def run_batched_loop(
         lo_noise_scale: Multiplier on LO white-FM noise amplitude.
         disc_noise_amp_ci: Discriminator-input noise amplitude (ci units,
             per decimation step std).
+        shared_noise_across_batch: If ``True``, use the first generated LO and
+            discriminator-noise row for every batch element.  This is useful for
+            paired controller comparisons.
         autograd: If ``True``, keep autograd graph alive for APG training.
         truncation_window: Number of physics substeps between BPTT detaches
             (only used when ``autograd=True``).
@@ -170,12 +174,22 @@ def run_batched_loop(
 
     # ---------------------------------------------------------------------------
     # Pre-generate LO noise: (B, n_physics)
+    #
+    # In shared-noise mode generate a single trajectory first, then repeat it.
+    # That preserves the exact RNG stream used by a canonical B=1 evaluation.
     # ---------------------------------------------------------------------------
     rng = np.random.default_rng(rng_seed)
+    noise_batch = 1 if shared_noise_across_batch and B > 1 else B
     if lo_noise_std_per_physics > 0.0:
-        lo_noise_np = rng.normal(0.0, lo_noise_std_per_physics, size=(B, n_physics))
+        lo_noise_np = rng.normal(
+            0.0,
+            lo_noise_std_per_physics,
+            size=(noise_batch, n_physics),
+        )
     else:
-        lo_noise_np = np.zeros((B, n_physics), dtype=np.float64)
+        lo_noise_np = np.zeros((noise_batch, n_physics), dtype=np.float64)
+    if shared_noise_across_batch and B > 1:
+        lo_noise_np = np.repeat(lo_noise_np[:1, :], B, axis=0)
 
     # Pilot tone: (n_physics,) — same for all batch elements
     if pilot_amp_Hz != 0.0 and pilot_freq_Hz != 0.0:
@@ -186,9 +200,11 @@ def run_batched_loop(
 
     # Discriminator noise: (B, n_dec)
     if disc_noise_amp_ci > 0.0 and controller is not None:
-        disc_noise_np = rng.normal(0.0, disc_noise_amp_ci, size=(B, n_dec))
+        disc_noise_np = rng.normal(0.0, disc_noise_amp_ci, size=(noise_batch, n_dec))
     else:
-        disc_noise_np = np.zeros((B, n_dec), dtype=np.float64)
+        disc_noise_np = np.zeros((noise_batch, n_dec), dtype=np.float64)
+    if shared_noise_across_batch and B > 1:
+        disc_noise_np = np.repeat(disc_noise_np[:1, :], B, axis=0)
 
     # ---------------------------------------------------------------------------
     # Warm-up (always no-grad)
@@ -347,6 +363,7 @@ def _run_nograd_loop(
 
     for k in range(n_dec):
         y_sum = torch.zeros(B, dtype=twin.dtype, device=twin.device)
+        ci_sum = torch.zeros(B, dtype=twin.dtype, device=twin.device)
         rf_actual_sum = np.zeros(B, dtype=np.float64)
 
         for j in range(decimation):
@@ -366,15 +383,11 @@ def _run_nograd_loop(
             B_now = dist_tensor[:, idx, 1]  # (B,)
             T_now = dist_tensor[:, idx, 0]  # (B,)
             y_sum += twin.fractional_frequency_error_with_B(state, ctrl, B_now, T_now)
+            ci_sum += state[:, 6]
             rf_actual_sum += rf_actual_batch
 
         # Decimation-averaged outputs
-        ci_avg = state[:, 6]  # coh_imag — proxy for error signal
-        # Accumulate ci across decimation (approximation: use ci at end of window)
-        # Per architecture: err_clean = boxcar of ci over window; we use end-of-window
-        # as in run_fast_loop (which uses ci_sum / decimation with last-step ci).
-        # For simplicity and speed, we use the end-of-window ci value (same result
-        # for stationary signals; minor diff for fast transients).
+        ci_avg = ci_sum / decimation
         err_clean = ci_avg.cpu().numpy()  # (B,)
 
         # Discriminator-input noise
@@ -388,8 +401,26 @@ def _run_nograd_loop(
         # Controller update
         if controller is not None:
             for b in range(B):
-                _, rf_corr = controller.step(float(err_noisy[b]))
+                last_idx = (k + 1) * decimation - 1
+                env = {
+                    "T_K": float(dist_tensor[b, last_idx, 0].item()),
+                    "B_uT": float(dist_tensor[b, last_idx, 1].item()),
+                    "I_norm": float(dist_tensor[b, last_idx, 2].item()),
+                }
+                _, rf_corr = _controller_step(controller, float(err_noisy[b]), env)
                 rf_cmd[b] = rf_corr
+
+
+def _controller_step(
+    controller: Any,
+    error: float,
+    env: dict[str, float],
+) -> tuple[float, float]:
+    """Call a controller with optional environment-sensor support."""
+    try:
+        return controller.step(error, env)
+    except TypeError:
+        return controller.step(error)
 
 
 # ---------------------------------------------------------------------------
@@ -474,6 +505,7 @@ def _run_autograd_loop(
         ctrl_rf = rf_corr_t + lo_noise_t[:, k * decimation]  # (B,) — still differentiable
 
         y_sum: Tensor = torch.zeros(B, dtype=twin.dtype, device=twin.device)
+        ci_sum: Tensor = torch.zeros(B, dtype=twin.dtype, device=twin.device)
         rf_actual_sum = np.zeros(B, dtype=np.float64)
 
         for j in range(decimation):
@@ -485,7 +517,7 @@ def _run_autograd_loop(
             else:
                 # Inner substep noise: non-differentiable additive noise
                 extra_noise = lo_noise_t[:, idx].detach()
-                rf_for_step = rf_corr_t.detach() + extra_noise
+                rf_for_step = rf_corr_t + extra_noise
 
             ctrl_j = torch.stack(
                 [torch.zeros(B, dtype=twin.dtype, device=twin.device), rf_for_step], dim=1
@@ -496,6 +528,7 @@ def _run_autograd_loop(
             B_now = dist_tensor[:, idx, 1].detach()
             T_now = dist_tensor[:, idx, 0].detach()
             y_sum = y_sum + twin.fractional_frequency_error_with_B(state, ctrl_j, B_now, T_now)
+            ci_sum = ci_sum + state[:, 6]
 
             rf_actual_sum += (
                 rf_corr_t.detach().cpu().numpy()
@@ -512,8 +545,8 @@ def _run_autograd_loop(
         y_dec = y_sum / decimation  # (B,)
         y_tensor_list.append(y_dec)
 
-        # Error signal: ci at end of window
-        err_clean = state[:, 6].detach().cpu().numpy()  # (B,)
+        # Error signal: boxcar-averaged ci over the decimation window.
+        err_clean = (ci_sum / decimation).detach().cpu().numpy()  # (B,)
         err_noisy = err_clean + disc_noise_np[:, k]
 
         y_out[:, k] = y_dec.detach().cpu().numpy()

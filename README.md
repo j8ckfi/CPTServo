@@ -1,87 +1,109 @@
 # CPTServo
 
-A calibrated digital twin and servo benchmark for a chip-scale CPT-Rb87 atomic clock. Three controllers (hand-tuned PI, receding-horizon LQR, learned PPO) are run head-to-head against five named disturbance recipes, with a five-probe adversarial battery validating the headline win.
+A calibrated digital-twin and servo benchmark for a chip-scale CPT-Rb87 atomic
+clock. The project compares a hand-tuned PI loop, a steady-state DLQR controller
+kept under the historical "RH-LQR" name, and a learned bounded-residual
+controller against named disturbance recipes.
 
-> **Headline.** A first-principles 8-level CPT twin, calibrated against Kitching 2018 + Knappe 2004/2005 + Microsemi SA.45s published σ_y curves to within 2× across τ ∈ {1, 10, 100, 1000} s. **Receding-horizon LQR runs 5.97× quieter than the PI baseline at σ_y(τ=10 s) on `thermal_ramp`**, and a five-probe adversarial battery — including a ±5% reality-gap perturbation of the calibrated parameters — preserves that win on every probe (5/5).
-
-See `writeup/report.md` for the full writeup.
+> **Headline.** The M5 benchmark reports the RH-LQR/DLQR controller running
+> 11.55x quieter than the PI baseline at sigma_y(tau=10 s) on `thermal_ramp`.
+> The M8 adversarial battery shows the frozen LQR remains ahead of PI on 5/5
+> perturbation probes, with speedups from 1.77x to 36.71x and a 2.97x
+> reality-gap win.  The M11 promotion gate promotes a bounded learned residual
+> on top of RH-LQR (`residual_mode=True, residual_limit_Hz=40`, structured terms
+> `k_T=1.5, k_dT=-0.01, kp_scale=1.6, ki_scale=1.0`) at a 0.9667 nominal M5
+> ratio with 5/5 robust ties/wins (worst probe 1.0009, inside the 0.005 tie
+> band) and 165 Hz peak RF action.  Promoted checkpoint:
+> `models/cfc_residual_m11_promoted.json`.  A self-contained C reference
+> implementation lives under `c_export/`, verified bit-for-bit against the
+> Python policy across 2006 test sequences.
 
 ## Status
 
-All milestones (M1-M10) closed. Milestone status lives in the project PRD at `Research/.omc/prd.json` and a free-form log in `progress.txt`. Per-gate numerics in `data/gate_M{N}.json`.
-
 | Milestone | Result |
 |---|---|
-| M1 | reduced twin v0 + literature scan (CLEAR) |
-| M2 | tier-1 OBE surface + tier-2 calibration (peak-slope <5%, lock-shift <2%) |
-| M3 | public-data calibration audit (Kitching ratios 0.84 / 0.75 / 0.74 — passes 2×) |
-| M4 | subsumed by M3 anti-fudge architecture |
-| M5 | RH-LQR baseline beats PI by 5.97× on thermal_ramp τ=10s |
-| M6 | APG architecture verified; noise-floor-limited at short horizons (PARTIAL) |
-| M7 | PPO infrastructure verified; underfits PI by 40× (DOCUMENTED FAIL — finding, not kill) |
-| M8 | adversarial battery 5/5 — FULL HEADLINE PRESERVED |
-| M9 | Jetson deployment dropped (RTX 4070 deemed sufficient for the writeup) |
-| M10 | writeup + README + reproduction recipe (this document) |
+| M2 | PASS — tier-1 OBE surface + tier-2 calibration; residual RMS 0.22 Hz |
+| M3 | PASS — Kitching 2018 ratios 0.84 / 0.75 / 0.74 at tau={1,10,100}s |
+| M5 | PASS — RH-LQR/DLQR beats PI by 11.55x on `thermal_ramp` at tau=10s |
+| M8 | PASS — RH-LQR retains positive win on 5/5 perturbation probes |
+| M11 | PASS — bounded residual on RH-LQR promoted (see headline) |
+
+Per-gate truth lives in `data/gate_M{N}.json`.
 
 ## Reproduction
 
 ```bash
-cd WIP/CPTServo
 pip install -e .[dev]
 pytest tests/ -v
 ruff check src/ scripts/
 
-# M2 OBE surface + tier-2 calibration (~10 min)
+# M2: tier-1 OBE surface + tier-2 reduced-twin calibration
 python scripts/compute_m2_surface.py
 
-# M3 + M4: calibration audit + PI baseline (~5 min)
+# M3: primary Kitching 2018 calibration audit
 python scripts/run_m3_m4_gates.py
 
-# M5: RH-LQR head-to-head vs PI (~5 min)
+# M5: RH-LQR/DLQR head-to-head vs PI
 python scripts/run_m5_gate.py
 
-# M6: APG training (Modal, ~30 min wall on 8-CPU + 64 GB RAM)
-modal run modal_apg_train.py::train
-python scripts/m6_apg_gate.py
-
-# M7: PPO curriculum + gate (~25 min train + ~60 min gate)
-python scripts/m7_ppo_train.py
-python scripts/m7_ppo_gate.py
-
-# M8: adversarial battery (~2 hours wall)
+# M8: adversarial probe battery
 python scripts/m8_adversarial.py
+
+# M11: bounded-residual promotion gate (uses models/cfc_residual_m11_promoted.json
+# as the comparison baseline; pass --candidate-checkpoint to test new candidates)
+python scripts/run_m11_gate.py --duration-s 100
+
+# Optional: regenerate the C export and verify it bit-for-bit against Python
+python scripts/export_residual_to_c.py
+cd c_export && make verify    # requires gcc/clang; or compile manually with TCC
 ```
 
-Each gate writes `data/gate_M{N}.json` with the numeric metrics, threshold, and pass/fail verdict.
+Each gate writes `data/gate_M{N}.json` with metrics, thresholds, and verdict.
 
-## Repository layout
+## Repository Layout
 
-```
-WIP/CPTServo/
-├── pyproject.toml
-├── requirements.txt
+```text
+CPTServo/
+├── pyproject.toml, requirements.txt
 ├── README.md
-├── progress.txt                              # free-form milestone log
-├── configs/v1_recipe.yaml                    # Layer-0 frozen artifact
-├── src/cptservo/
-│   ├── twin/                                 # tier-1 OBE + tier-2 reduced
-│   ├── baselines/                            # pi.py, rh_lqr.py
-│   ├── policy/                               # apg.py, cpt_env.py, training.py
-│   ├── evaluation/                           # batched_runner.py, allan.py
-│   └── calibration/                          # fit_reduced.py
-├── scripts/                                  # m2..m8 gate drivers
-├── tests/                                    # pytest unit + integration
-│   └── adversarial/REPORT.md                 # M8 aggregator
-├── data/                                     # gate JSONs, OBE surface (h5)
-├── models/                                   # ppo_best.zip, apg_*.pt
-├── logs/                                     # m{2..8}_*.log
-└── writeup/report.md                         # 2-3pp PNTGuard-style writeup
+├── configs/v1_recipe.yaml
+├── src/
+│   ├── cptservo/
+│   │   ├── twin/          # tier-1 OBE + tier-2 reduced twin
+│   │   ├── baselines/     # PI and RH-LQR/DLQR controllers
+│   │   ├── policy/        # bounded-residual learned controller
+│   │   ├── evaluation/    # closed-loop and batched runners
+│   │   └── calibration/   # tier-2 fit helpers
+│   └── rbspec/            # vendored Rb-87 constants
+├── scripts/               # M2/M3/M5/M8/M11 gate drivers + C export utilities
+├── tests/                 # pytest unit + integration tests
+├── data/                  # canonical gate JSONs + M2 calibration artifacts
+├── models/                # promoted M11 checkpoint
+├── c_export/              # self-contained C reference implementation
+└── writeup/report.md
 ```
 
-## Acknowledgements
+## C reference implementation
 
-Physical constants imported from sibling project `RbSpec` (`WIP/RbSpec/src/rbspec/solver.py`): HF_GROUND, Doppler width helpers, Voigt profile, Rb-87 D1/D2 wavelengths and oscillator strengths.
+`c_export/` contains a self-contained, MCU-friendly C reference implementation
+of the promoted residual controller, plus a Python verification harness that
+runs 2006 sequences through both the Python and C paths and reports max |diff|
+in Hz.  The hot path is roughly 200 multiplies plus 8 transcendentals per
+1 ms tick, uses only `double` arithmetic and `<math.h>`, and keeps all state
+in a caller-owned `cpt_controller_t` struct.
 
-Calibration anchored to: Kitching, J. *Applied Physics Reviews* 5, 031302 (2018); Knappe, S. et al. *Optics Letters* 29(7), 695 (2004); Knappe, S. et al. *Applied Physics Letters* 86, 154102 (2005); Microsemi SA.45s CSAC datasheet.
+Regenerate the baked coefficient header after any change to the promoted
+checkpoint:
 
-Tier-2 reduction theory: Vanier, J. & Mandache, C. *Applied Physics B* 87, 565 (2007).
+```bash
+python scripts/export_residual_to_c.py
+```
+
+## Dependencies
+
+The Rb-87 constants originally came from sibling project `WIP/RbSpec`; the
+subset CPTServo imports is vendored under `src/rbspec` so editable installs
+work without that sibling checkout.
+
+Calibration anchors: Kitching 2018, Knappe 2004/2005, Microsemi SA.45s, and
+Vanier & Mandache 2007 for the tier-2 reduction.

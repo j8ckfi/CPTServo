@@ -1,9 +1,9 @@
-"""CPTServo: learned closed-loop servo for a chip-scale CPT-Rb87 atomic clock.
+"""CPTServo: digital-twin servo benchmarks for a chip-scale CPT-Rb87 clock.
 
-A digital twin of a Knappe-lab-lineage chip-scale CPT-Rb87 atomic clock plus a
-learned servo trained via differentiable-physics analytic policy gradient (APG)
-through the twin, benchmarked against PI and receding-horizon LQR baselines,
-deployed on a Jetson Orin Nano.
+The completed positive control result is a PI-vs-RH-LQR/DLQR benchmark. The
+learned-control paths include documented APG/PPO negatives plus a direct-CfC
+follow-on that improves nominal M5 but is not promoted by the M11 robustness
+gate.
 """
 
 from __future__ import annotations

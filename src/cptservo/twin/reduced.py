@@ -25,6 +25,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 import yaml
+from torch import Tensor
 
 # ---------------------------------------------------------------------------
 # RbSpec physical constants (Steck-validated)
@@ -37,7 +38,6 @@ from rbspec.solver import (
     doppler_width,
     killian_vapor_density,
 )
-from torch import Tensor
 
 # ---------------------------------------------------------------------------
 # Precise reference frequency from the Layer-0 recipe (Steck 2.3).

@@ -1,7 +1,7 @@
 # M8 Adversarial Battery — REPORT
-**Verdict**: `gate_pass=True` (LQR wins on 5/5 probes; reality_gap_speedup=1.959, pos>5%=True)
+**Verdict**: `gate_pass=True` (LQR wins on 5/5 probes; reality_gap_speedup=2.975, pos>5%=True)
 
-Headline disposition: **Full M5 5.97× win preserved.**
+Headline disposition: **Robust positive LQR win preserved.**
 
 ## Architecture
 All probes use the same anti-fudge architecture as M3/M5:
@@ -11,17 +11,17 @@ All probes use the same anti-fudge architecture as M3/M5:
 * same RNG seed across PI and LQR for paired comparison
 
 ## Baseline reproduce of M5
-thermal_ramp τ=10s: PI=`2.261e-11`, LQR=`1.155e-11`, speedup=`1.959` (M5 reported 5.97; harness reproduces within 30%).
+thermal_ramp τ=10s: PI=`2.981e-11`, LQR=`1.002e-11`, speedup=`2.975`. This 200-second adversarial harness is not used to reproduce the M5 11.55x magnitude; it tests whether the frozen LQR retains a positive win under perturbations.
 
 ## Probe results
 
 | Probe | PI σ_y(10s) | LQR σ_y(10s) | speedup | LQR wins? |
 |---|---:|---:|---:|:---:|
-| `ood_3x_thermal_slope` | 2.489e-11 | 1.782e-11 | 1.397 | YES |
-| `high_disc_noise_3x` | 3.680e-11 | 2.981e-11 | 1.234 | YES |
-| `low_disc_noise_third` | 2.194e-11 | 7.956e-12 | 2.757 | YES |
-| `reality_gap_5pct` | 2.261e-11 | 1.155e-11 | 1.959 | YES |
-| `worst_case_2x_stacked` | 3.282e-11 | 1.716e-11 | 1.913 | YES |
+| `ood_3x_thermal_slope` | 6.062e-10 | 1.651e-11 | 36.710 | YES |
+| `high_disc_noise_3x` | 5.657e-11 | 3.000e-11 | 1.886 | YES |
+| `low_disc_noise_third` | 1.825e-11 | 3.973e-12 | 4.593 | YES |
+| `reality_gap_5pct` | 2.981e-11 | 1.002e-11 | 2.975 | YES |
+| `worst_case_2x_stacked` | 2.903e-11 | 1.639e-11 | 1.771 | YES |
 
 ## Probe definitions
 
@@ -36,4 +36,4 @@ Per plan §M8: RH-LQR retains positive win on ≥3 of 5 probes
 AND retains > 5 % positive win on the reality-gap probe.
 
 ## Honest assessment
-All adversarial probes preserve the M5 RH-LQR win. The writeup headline of '5.97× quieter than PI on thermal_ramp τ=10s' is robust across the tested perturbation surface.
+All adversarial probes preserve a positive RH-LQR win. The robust conclusion is not that the exact 11.55x M5 magnitude reappears here; it is that the frozen LQR remains ahead of PI across the tested perturbation surface.

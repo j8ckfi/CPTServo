@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"python -m ruff check src/ scripts/ tests/ 2>&1\",\"description\":\"Run ruff on all source files\"}",
-  "error": "Exit code 1\nF541 [*] f-string without any placeholders\n   --> scripts\\m7_ppo_gate.py:641:9\n    |\n639 |     log(f\"  M7 {verdict}\")\n640 |     log(\n641 |         f\"  Primary criterion: PPO sigma_y(10s) <= PI sigma_y(10s) on thermal_ramp\"\n    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n642 |     )\n643 |     log(\n    |\nhelp: Remove extraneous `f` prefix\n\nFound 1 error.\n[*] 1 fixable with the `--fix` option.",
-  "timestamp": "2026-04-29T04:50:53.372Z",
-  "retry_count": 1
-}

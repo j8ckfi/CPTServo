@@ -27,6 +27,7 @@ from pathlib import Path
 import h5py
 import numpy as np
 import qutip as qt
+
 from rbspec.solver import (
     FWHM_D1,
     HF_EXCITED_D1,

@@ -1,7 +1,9 @@
-"""M8 adversarial battery: stress-test the M5 RH-LQR headline win.
+"""M8 adversarial battery: stress-test the M5 RH-LQR benchmark.
 
-The M5 headline is **RH-LQR beats PI by 5.97x on thermal_ramp at tau=10s**.
-M8 asks: does that win survive adversarial conditions?
+M5 reports **RH-LQR beats PI by 11.55x on thermal_ramp at tau=10s** in its
+100-second benchmark harness. M8 asks a narrower robustness question: does the
+same frozen controller retain a positive win under perturbed conditions in this
+200-second adversarial harness?
 
 Five probes, each runs PI and RH-LQR on a perturbed scenario for 200 s and
 reports sigma_y(tau=10s):
@@ -19,9 +21,8 @@ Gate (per plan, soft-kill / demote):
     RH-LQR retains positive win on >= 3 of 5 probes,
     AND retains > 5 % positive win on Probe D (reality-gap).
 
-If gate fails, headline reframes from "5.97x win" to "5.97x win on the
-calibrated twin; under adversarial conditions characterised below ..."
-This is the BGC-pattern "failure becomes the contribution".
+If gate fails, the nominal LQR-win claim is demoted and the failure modes below
+become the result.
 
 Anti-fudge discipline
 ---------------------
@@ -413,9 +414,9 @@ def aggregate_and_write(results: dict[str, Any]) -> dict[str, Any]:
 
     gate_pass = bool(n_lqr_wins >= 3 and reality_gap_pos_5pct)
     gate_disposition = (
-        "FULL HEADLINE PRESERVED"
+        "ROBUST POSITIVE WIN PRESERVED"
         if gate_pass
-        else "DEMOTE HEADLINE — characterised failure modes"
+        else "DEMOTE HEADLINE - characterised failure modes"
     )
 
     log("=== M8 Battery summary ===")
@@ -467,7 +468,7 @@ def aggregate_and_write(results: dict[str, Any]) -> dict[str, Any]:
     )
     lines.append(
         "Headline disposition: **"
-        + ("Full M5 5.97× win preserved." if gate_pass else gate_disposition)
+        + ("Robust positive LQR win preserved." if gate_pass else gate_disposition)
         + "**\n\n"
     )
 
@@ -485,8 +486,10 @@ def aggregate_and_write(results: dict[str, Any]) -> dict[str, Any]:
     lines.append(
         f"thermal_ramp τ=10s: PI=`{b['pi_sigma_y_10s']:.3e}`, "
         f"LQR=`{b['lqr_sigma_y_10s']:.3e}`, "
-        f"speedup=`{b['speedup_lqr_over_pi_10s']:.3f}` "
-        f"(M5 reported 5.97; harness reproduces within 30%).\n\n"
+        f"speedup=`{b['speedup_lqr_over_pi_10s']:.3f}`. "
+        "This 200-second adversarial harness is not used to reproduce the "
+        "M5 11.55x magnitude; it tests whether the frozen LQR retains a "
+        "positive win under perturbations.\n\n"
     )
 
     lines.append("## Probe results\n\n")
@@ -527,17 +530,16 @@ def aggregate_and_write(results: dict[str, Any]) -> dict[str, Any]:
     lines.append("## Honest assessment\n")
     if gate_pass:
         lines.append(
-            "All adversarial probes preserve the M5 RH-LQR win. The "
-            "writeup headline of '5.97× quieter than PI on thermal_ramp τ=10s' "
-            "is robust across the tested perturbation surface.\n"
+            "All adversarial probes preserve a positive RH-LQR win. The "
+            "robust conclusion is not that the exact 11.55x M5 magnitude "
+            "reappears here; it is that the frozen LQR remains ahead of PI "
+            "across the tested perturbation surface.\n"
         )
     else:
         lines.append(
-            "At least one adversarial probe demotes the M5 headline. The "
-            "writeup will reframe to: *5.97× win on the calibrated twin; "
-            "under the conditions characterised in M8 it degrades as "
-            "follows ...* This is the BGC pattern: failure becomes the "
-            "contribution.\n"
+            "At least one adversarial probe demotes the nominal LQR-win "
+            "claim. The writeup should present the nominal result and then "
+            "characterise the failure modes shown above.\n"
         )
 
     report_path.write_text("".join(lines), encoding="utf-8")
