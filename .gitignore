@@ -42,3 +42,6 @@ logs/
 c_export/test_residual
 c_export/test_residual.exe
 c_export/*.o
+
+# Personal blog posts about the project; kept on disk, not published
+documentation/posts/
