@@ -167,6 +167,11 @@ slope variation on the table, documented in `data/gate_M2.json` rather than
 hidden inside a tighter fit.  Sim-to-real results on a real clock will land
 somewhere in that gap.
 
+> If you have access to a chip-scale CPT-Rb87 clock module and want to point
+> this controller at one, please open an issue on this repo or reach out via
+> GitHub.  I would genuinely like to measure the sim-to-real gap, and the C
+> reference implementation under `c_export/` exists exactly for that purpose.
+
 ## Reproduction
 
 ```bash
