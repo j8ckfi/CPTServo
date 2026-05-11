@@ -1,46 +1,51 @@
 # CPTServo: Calibrated Twin and Servo Benchmark for Chip-Scale CPT-Rb87 Clocks
 
-## Pitch
+## Summary
 
 CPTServo is a software-only benchmark for the in-loop RF servo of a chip-scale
 Rb-87 coherent-population-trapping clock.  It contains a QuTiP 16-level OBE
 surface model, a faster PyTorch reduced twin, a hand-tuned PI baseline, a
-steady-state DLQR controller historically labeled RH-LQR, and a learned
-bounded-residual controller promoted by the M11 gate.
+steady-state DLQR controller, and a learned bounded-residual controller.
 
-The classical headline: in the 100-second `thermal_ramp` benchmark, RH-LQR/DLQR
-reaches sigma_y(tau=10 s) = 5.07e-12 versus PI at 5.86e-11, an 11.55x
-improvement.  The M8 adversarial battery preserves a positive LQR win across
-five perturbation probes (1.77x to 36.71x speedups, 2.97x reality-gap).
+The classical headline: on the 100-second thermal-ramp benchmark, the DLQR
+controller reaches sigma_y(tau = 10 s) = 5.07e-12 versus PI at 5.86e-11, an
+11.55x improvement.  The five-scenario adversarial battery keeps a positive
+DLQR win across every perturbation tested (1.77x to 36.71x speedups, 2.97x
+under a 5% twin miscalibration).
 
-The learned headline: the M11 promotion gate promotes a bounded learned
-residual on top of RH-LQR at a 0.9667 nominal M5 ratio with 5/5 robust ties
-or wins.  The promoted controller adds at most 40 Hz of learned RF action on
-top of the LQR baseline, so the worst case structurally degrades back to
-RH-LQR.
+The learned headline: the bounded-residual learned controller improves the
+classical nominal benchmark by another 3.3% (0.967 sigma_y ratio versus DLQR)
+while staying inside a 0.5% tie band on all five robustness scenarios.  The
+worst single scenario tested is the 3x thermal-slope probe at 1.0009.  The
+controller's structural guarantee is the residual clip: with the learned
+readout set to zero, the controller reduces exactly to the DLQR, so the
+worst-case robustness is bounded by the classical baseline.
 
 ## Twin Architecture
 
-Tier 1 is a 16-level QuTiP Lindblad model over the Rb-87 D1 manifold.  It is
-used offline to generate a discriminator response surface over RF detuning,
-laser detuning, temperature, magnetic field, and laser intensity.
+The tier-1 model is a 16-level QuTiP Lindblad simulation over the Rb-87 D1
+manifold.  It is used offline to generate a discriminator response surface
+over RF detuning, laser detuning, temperature, magnetic field, and laser
+intensity.
 
-Tier 2 is an 8-state PyTorch reduced twin with clock-state populations, a
-lumped Zeeman bath, excited-state populations, CPT coherence, and intensity
-proxy.  It is differentiable and fast enough for batched controller evaluation.
+The tier-2 model is an 8-state PyTorch reduced twin with clock-state
+populations, a lumped Zeeman bath, excited-state populations, CPT coherence,
+and an intensity proxy.  It is differentiable and fast enough for batched
+controller evaluation.
 
 The OBE-to-reduced calibration uses closed-form OLS on lock-point shifts.
-`data/gate_M2.json` reports residual RMS 0.22 Hz.  The reduced model's uniform
-discriminator-slope assumption leaves 35.8% OBE slope variation documented as
-a structural limitation rather than hidden by fitting.
+The fit artifact at `data/gate_M2.json` reports residual RMS 0.22 Hz.  The
+reduced model's uniform discriminator-slope assumption leaves 35.8% OBE slope
+variation documented as a structural limitation rather than hidden by fitting.
 
 The Rb-87 spectroscopy constants used from the sibling RbSpec project are
 vendored under `src/rbspec` so this repository is self-contained.
 
 ## Calibration Audit
 
-`data/gate_M3.json` is the source of truth.  The primary Kitching 2018 audit
-passes the 2x tolerance at tau={1,10,100}s:
+The published-data audit at `data/gate_M3.json` is the source of truth.  The
+primary Kitching 2018 comparison passes the 2x tolerance at tau = 1, 10, and
+100 s:
 
 | tau (s) | Twin sigma_y | Published target | Ratio |
 |---:|---:|---:|---:|
@@ -54,23 +59,21 @@ calibrated published-data twin, not a bench-validated physical instrument.
 
 ## Controller Benchmark
 
-| Controller | State | Key result |
+| Controller | Status | Result |
 |---|---|---|
-| PI | implemented baseline | M5 thermal-ramp sigma_y(10s) = 5.86e-11 |
-| RH-LQR/DLQR | steady-state 2-state DLQR | M5 sigma_y(10s) = 5.07e-12, 11.55x over PI |
-| Direct CfC (residual mode) | promoted M11 learned controller | nominal M5 ratio 0.9667 vs RH-LQR with 5/5 robust ties/wins; worst probe 1.0009 inside 1.005 band; rf peak 165 Hz |
+| PI | hand-tuned baseline | sigma_y(10 s) = 5.86e-11 on thermal_ramp |
+| DLQR | steady-state, 2-state | sigma_y(10 s) = 5.07e-12, 11.55x over PI |
+| Bounded-residual learned | promoted | 0.967 sigma_y ratio versus DLQR, 5/5 robust, 165 Hz peak RF |
 
-The name "RH-LQR" is retained because it is used throughout the artifacts, but
-the implementation solves one discrete algebraic Riccati equation and applies
-a steady-state gain.  It is not an iterative constrained MPC solver.
+The DLQR implementation solves one discrete algebraic Riccati equation and
+applies a steady-state gain.  It is not an iterative constrained MPC solver.
 
 ## Adversarial Battery
 
-M8 runs PI and the frozen RH-LQR/DLQR controller under five perturbed probes
-for 200 seconds each.  `data/gate_M8.json` and `tests/adversarial/REPORT.md`
-are the source of truth.
+The robustness battery at `data/gate_M8.json` runs PI and the frozen DLQR
+through five perturbed scenarios for 200 seconds each.
 
-| Probe | LQR speedup vs PI at tau=10s |
+| Scenario | DLQR speedup vs PI at sigma_y(10 s) |
 |---|---:|
 | OOD thermal slope, 3x | 36.71x |
 | High discriminator noise, 3x | 1.89x |
@@ -78,57 +81,61 @@ are the source of truth.
 | Reality gap, +/-5% twin params | 2.97x |
 | Worst-case stacked B/I drift | 1.77x |
 
-This preserves a positive LQR win on 5/5 probes and clears the reality-gap
-threshold.  It does not preserve or reproduce the exact 11.55x M5 magnitude.
+This preserves a positive DLQR win on all five scenarios and clears the
+reality-gap threshold.  It does not reproduce the exact 11.55x classical
+magnitude; that's the headline thermal-ramp number, and the perturbed
+scenarios are read as robustness checks, not magnitude reproductions.
 
-## Promoted Learned Controller (M11)
+## Bounded-Residual Learned Controller
 
-The M11 promotion gate promotes a bounded residual on RH-LQR.  The promoted
-checkpoint is:
+The promoted learned controller is at:
 
 ```text
 models/cfc_residual_m11_promoted.json
 ```
 
-The controller uses the same `CfCDirectController` feature extraction as the
-direct-CfC family, but with `residual_mode=True` and `residual_limit_Hz=40`.
-At each step it computes `u_LQR` internally and adds a structured residual
-clipped to +-40 Hz:
+Architecturally it is the same `CfCDirectController` feature extractor used in
+earlier CfC experiments, but the output path runs in residual mode with a
+40 Hz clip.  At each step the controller computes the DLQR action internally
+and adds a structured residual clipped to +-40 Hz:
 
 ```text
-u = clip(u_LQR + clip(0.6*kp_lqr*err + 1.5*(T - T_nom) - 0.01*dT, +-40 Hz), +-rf_limit)
+u = clip(u_DLQR + clip(0.6 * kp_DLQR * err + 1.5 * (T - T_nom) - 0.01 * dT,
+                        +-40 Hz),
+         +-rf_limit_Hz)
 ```
 
-The structured coefficients are kp_scale=1.6 (0.6 extra proportional gain on
-top of LQR), k_T=1.5 Hz/K thermal feedforward, k_dT=-0.01 Hz/(K/s) thermal
-derivative damping.  Under nominal conditions the residual amplitude stays
-inside the clip band, so the controller adds a useful learned correction.
-Under the 3x OOD thermal slope the unclipped residual would saturate hard, the
-clip activates, and actuator excursion is bounded to 165 Hz peak.  That keeps
-`ood_3x_thermal_slope` at 1.0009 (well inside the 0.5% tie band).
+The structured coefficients are kp_scale = 1.6 (0.6 extra proportional gain on
+top of the DLQR), k_T = 1.5 Hz/K thermal feedforward, k_dT = -0.01 Hz/(K/s)
+thermal derivative damping.  Under nominal conditions the residual amplitude
+stays inside the clip band, so the controller adds a useful learned correction.
+Under the 3x out-of-distribution thermal slope the unclipped residual would
+saturate hard, the clip activates, and actuator excursion is bounded to 165 Hz
+peak.  That keeps the 3x thermal-slope ratio at 1.0009 (well inside the 0.5%
+tie band).
 
 Full 100-second `data/gate_M11.json`:
 
-| Probe | ratio vs RH-LQR | tie/win |
+| Scenario | ratio vs DLQR | tie/win |
 |---|---:|:---:|
-| m5_thermal_ramp | 0.96665 | YES |
-| ood_3x_thermal_slope | 1.00091 | YES |
-| high_disc_noise_3x | 0.99814 | YES |
-| low_disc_noise_third | 0.98279 | YES |
-| reality_gap_5pct | 0.99461 | YES |
-| worst_case_2x_stacked | 0.99116 | YES |
+| thermal_ramp (nominal) | 0.96665 | YES |
+| 3x thermal slope | 1.00091 | YES |
+| 3x discriminator noise | 0.99814 | YES |
+| 1/3x discriminator noise | 0.98279 | YES |
+| 5% reality gap | 0.99461 | YES |
+| 2x stacked B/I drift | 0.99116 | YES |
 
-`gate_pass = true`, 5/5 robust ties/wins, `rf_abs_max_Hz = 165.2` (well under
-the 950 Hz actuator headroom).
+5/5 robust ties or wins, peak RF excursion 165.2 Hz (limit 950).
 
-The dominant engineering lever is the residual architecture itself: setting
-all readout weights to zero exactly reproduces RH-LQR, so the worst case is
-structurally bounded by the LQR baseline.  Three supporting levers in the
-campaign make the winning spec discoverable: strict-minimax scoring in
-`scripts/cfc_improvement_campaign.py` (any robust probe miss is +inf rather
-than a soft penalty), a 4x slope screen probe harder than the gate's 3x, and
-a loosened integral-state clip in `CfCDirectController` (+-5e-2 from the
-prior +-1e-2) so the integral term is not saturated during transients.
+The dominant engineering lever is the residual architecture itself.  Setting
+all readout weights to zero exactly reproduces the DLQR, so the worst case is
+structurally bounded by the classical baseline.  Three supporting changes in
+the campaign script make the winning spec discoverable: strict-minimax scoring
+in `scripts/cfc_improvement_campaign.py` (a robust-scenario miss is +inf rather
+than a soft penalty), a 4x thermal-slope screen scenario harder than the
+robustness benchmark's 3x, and a loosened integral-state clip in the
+`CfCDirectController` (+-5e-2 from the prior +-1e-2) so the integral term is
+not saturated during transients.
 
 ### C reference implementation
 
@@ -142,8 +149,8 @@ No mallocs, no globals.
 Coefficients are baked into `c_export/cptservo_coeffs.h` from the JSON
 checkpoint by `scripts/export_residual_to_c.py`.  `scripts/verify_c_residual.py`
 runs 2006 (error, T_K, B_uT, I_norm) sequences (2001 random plus 5 hand-picked
-edge cases including NaN sensors) through both the Python and C
-implementations and reports max |diff| = 0 Hz on the promoted checkpoint.
+edge cases including NaN sensor input) through both the Python and C paths
+and reports max absolute difference = 0 Hz on the promoted checkpoint.
 
 ## Reproduction
 
@@ -157,13 +164,15 @@ python scripts/cfc_improvement_campaign.py --screen-duration-s 25 --max-specs 60
 python scripts/run_m11_gate.py --duration-s 100
 ```
 
-Longer gates are expensive: M3 uses 1000-second closed-loop simulations, and
-M8 takes about 2.25 hours on the saved run.
+Long runs are expensive: the published-data audit uses 1000-second closed-loop
+simulations, and the robustness battery takes about 2.25 hours on a single
+modern workstation.
 
 ## Runner Status
 
-The positive LQR benchmark path is consolidated on `run_batched_loop` for M5,
-M8, and M11.  The older `run_fast_loop` remains as legacy M3 calibration code.
-New PI-vs-LQR claims should be generated through `scripts/run_m5_gate.py` or
+The benchmark and robustness paths are consolidated on `run_batched_loop` for
+the DLQR head-to-head, the adversarial battery, and the learned-controller
+comparison.  The older `run_fast_loop` remains as legacy calibration code.
+New PI-vs-DLQR claims should be generated through `scripts/run_m5_gate.py` or
 `scripts/m8_adversarial.py`; new learned-controller claims should be generated
 through `scripts/run_m11_gate.py` against the promoted residual baseline.

@@ -1,34 +1,35 @@
 # CPTServo
 
-A calibrated digital-twin and servo benchmark for a chip-scale CPT-Rb87 atomic
-clock. The project compares a hand-tuned PI loop, a steady-state DLQR controller
-kept under the historical "RH-LQR" name, and a learned bounded-residual
-controller against named disturbance recipes.
+A calibrated digital-twin and servo benchmark for chip-scale CPT-Rb87 atomic
+clocks.  The project compares a hand-tuned PI loop, a steady-state DLQR
+controller, and a learned bounded-residual controller against a fixed set of
+disturbance scenarios.
 
-> **Headline.** The M5 benchmark reports the RH-LQR/DLQR controller running
-> 11.55x quieter than the PI baseline at sigma_y(tau=10 s) on `thermal_ramp`.
-> The M8 adversarial battery shows the frozen LQR remains ahead of PI on 5/5
-> perturbation probes, with speedups from 1.77x to 36.71x and a 2.97x
-> reality-gap win.  The M11 promotion gate promotes a bounded learned residual
-> on top of RH-LQR (`residual_mode=True, residual_limit_Hz=40`, structured terms
-> `k_T=1.5, k_dT=-0.01, kp_scale=1.6, ki_scale=1.0`) at a 0.9667 nominal M5
-> ratio with 5/5 robust ties/wins (worst probe 1.0009, inside the 0.005 tie
-> band) and 165 Hz peak RF action.  Promoted checkpoint:
+> **Headline.** On the 100-second thermal-ramp benchmark, the DLQR controller
+> runs 11.55 times quieter than the PI baseline at the 10-second Allan-deviation
+> point (sigma_y).  A five-scenario adversarial battery confirms the DLQR keeps
+> a positive win across every perturbation tested (1.77x to 36.71x speedups,
+> 2.97x under a 5% twin miscalibration).  The learned controller, a bounded
+> residual sitting on top of the DLQR, improves the nominal benchmark by
+> another 3.3% (0.967 ratio) while staying inside the 0.5% tie band on all
+> five robustness scenarios.  Its peak RF excursion is 165 Hz against a 950 Hz
+> actuator limit.  Promoted checkpoint:
 > `models/cfc_residual_m11_promoted.json`.  A self-contained C reference
-> implementation lives under `c_export/`, verified bit-for-bit against the
-> Python policy across 2006 test sequences.
+> implementation in `c_export/` matches the Python policy bit-for-bit across
+> 2006 test sequences.
 
-## Status
+## What's in the repo
 
-| Milestone | Result |
+| Step | Result |
 |---|---|
-| M2 | PASS — tier-1 OBE surface + tier-2 calibration; residual RMS 0.22 Hz |
-| M3 | PASS — Kitching 2018 ratios 0.84 / 0.75 / 0.74 at tau={1,10,100}s |
-| M5 | PASS — RH-LQR/DLQR beats PI by 11.55x on `thermal_ramp` at tau=10s |
-| M8 | PASS — RH-LQR retains positive win on 5/5 perturbation probes |
-| M11 | PASS — bounded residual on RH-LQR promoted (see headline) |
+| Twin calibration (OBE surface + reduced-twin fit) | residual RMS 0.22 Hz |
+| Published-data audit against Kitching 2018 | sigma_y ratios 0.84 / 0.75 / 0.74 at tau = 1/10/100 s |
+| Classical controller headline (DLQR vs PI) | 11.55x improvement at sigma_y(10 s) |
+| Adversarial robustness battery | DLQR keeps a positive win on 5/5 scenarios |
+| Learned controller | bounded residual on DLQR; 0.967 nominal, 5/5 robust |
 
-Per-gate truth lives in `data/gate_M{N}.json`.
+Each step has a JSON artifact under `data/` recording the metrics, thresholds,
+and verdict that produced its result.
 
 ## Reproduction
 
@@ -37,28 +38,29 @@ pip install -e .[dev]
 pytest tests/ -v
 ruff check src/ scripts/
 
-# M2: tier-1 OBE surface + tier-2 reduced-twin calibration
+# Build the tier-1 OBE surface and fit the reduced twin
 python scripts/compute_m2_surface.py
 
-# M3: primary Kitching 2018 calibration audit
+# Run the published-data calibration audit
 python scripts/run_m3_m4_gates.py
 
-# M5: RH-LQR/DLQR head-to-head vs PI
+# DLQR vs PI head-to-head on thermal_ramp
 python scripts/run_m5_gate.py
 
-# M8: adversarial probe battery
+# Five-scenario adversarial robustness battery
 python scripts/m8_adversarial.py
 
-# M11: bounded-residual promotion gate (uses models/cfc_residual_m11_promoted.json
-# as the comparison baseline; pass --candidate-checkpoint to test new candidates)
+# Bounded-residual learned controller against the DLQR baseline
 python scripts/run_m11_gate.py --duration-s 100
 
-# Optional: regenerate the C export and verify it bit-for-bit against Python
+# Regenerate the C reference implementation from the promoted checkpoint and
+# verify it bit-for-bit against the Python policy
 python scripts/export_residual_to_c.py
-cd c_export && make verify    # requires gcc/clang; or compile manually with TCC
+cd c_export && make verify
 ```
 
-Each gate writes `data/gate_M{N}.json` with metrics, thresholds, and verdict.
+The compute_m2 + audit + DLQR + robustness chain takes a few hours on a single
+modern workstation; the learned-controller comparison adds about half an hour.
 
 ## Repository Layout
 
@@ -70,15 +72,15 @@ CPTServo/
 ├── src/
 │   ├── cptservo/
 │   │   ├── twin/          # tier-1 OBE + tier-2 reduced twin
-│   │   ├── baselines/     # PI and RH-LQR/DLQR controllers
+│   │   ├── baselines/     # PI and steady-state DLQR controllers
 │   │   ├── policy/        # bounded-residual learned controller
 │   │   ├── evaluation/    # closed-loop and batched runners
 │   │   └── calibration/   # tier-2 fit helpers
 │   └── rbspec/            # vendored Rb-87 constants
-├── scripts/               # M2/M3/M5/M8/M11 gate drivers + C export utilities
+├── scripts/               # gate drivers + C export utilities
 ├── tests/                 # pytest unit + integration tests
-├── data/                  # canonical gate JSONs + M2 calibration artifacts
-├── models/                # promoted M11 checkpoint
+├── data/                  # benchmark artifacts + calibration outputs
+├── models/                # promoted learned controller checkpoint
 ├── c_export/              # self-contained C reference implementation
 └── writeup/report.md
 ```
@@ -87,13 +89,13 @@ CPTServo/
 
 `c_export/` contains a self-contained, MCU-friendly C reference implementation
 of the promoted residual controller, plus a Python verification harness that
-runs 2006 sequences through both the Python and C paths and reports max |diff|
-in Hz.  The hot path is roughly 200 multiplies plus 8 transcendentals per
-1 ms tick, uses only `double` arithmetic and `<math.h>`, and keeps all state
-in a caller-owned `cpt_controller_t` struct.
+runs 2006 sequences through both the Python and C paths and reports the
+maximum absolute difference in Hz.  The hot path is roughly 200 multiplies plus
+8 transcendentals per 1 ms control tick, uses only `double` arithmetic and
+`<math.h>`, and keeps all state in a caller-owned `cpt_controller_t` struct.
 
-Regenerate the baked coefficient header after any change to the promoted
-checkpoint:
+After any change to the promoted checkpoint, regenerate the baked coefficient
+header:
 
 ```bash
 python scripts/export_residual_to_c.py
@@ -101,9 +103,9 @@ python scripts/export_residual_to_c.py
 
 ## Dependencies
 
-The Rb-87 constants originally came from sibling project `WIP/RbSpec`; the
-subset CPTServo imports is vendored under `src/rbspec` so editable installs
-work without that sibling checkout.
+The Rb-87 spectroscopy constants originally came from a sibling project
+(`WIP/RbSpec`); the subset CPTServo imports is vendored under `src/rbspec` so
+editable installs work without that sibling checkout.
 
 Calibration anchors: Kitching 2018, Knappe 2004/2005, Microsemi SA.45s, and
 Vanier & Mandache 2007 for the tier-2 reduction.

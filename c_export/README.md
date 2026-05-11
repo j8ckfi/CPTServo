@@ -1,7 +1,8 @@
 # CPTServo Residual C Export
 
 This directory contains a self-contained C reference implementation of the
-M11-promoted bounded-residual `CfCDirectController` checkpoint.
+promoted bounded-residual `CfCDirectController` checkpoint
+(`models/cfc_residual_m11_promoted.json`).
 
 Build and verify from this directory:
 
