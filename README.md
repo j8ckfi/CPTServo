@@ -1,22 +1,25 @@
 # CPTServo
 
-A calibrated digital-twin and servo benchmark for chip-scale CPT-Rb87 atomic
-clocks.  The project compares a hand-tuned PI loop, a steady-state DLQR
-controller, and a learned bounded-residual controller against a fixed set of
-disturbance scenarios.
+CPTServo is a software-only benchmark for the in-loop RF servo of a chip-scale
+Rb-87 coherent-population-trapping clock.  It pairs a 16-level QuTiP OBE
+simulation with a faster differentiable reduced-order twin, then compares a
+hand-tuned PI loop, a steady-state DLQR, and a learned bounded-residual
+controller across a fixed set of disturbance scenarios.
 
-> **Headline.** On the 100-second thermal-ramp benchmark, the DLQR controller
-> runs 11.55 times quieter than the PI baseline at the 10-second Allan-deviation
-> point (sigma_y).  A five-scenario adversarial battery confirms the DLQR keeps
-> a positive win across every perturbation tested (1.77x to 36.71x speedups,
-> 2.97x under a 5% twin miscalibration).  The learned controller, a bounded
-> residual sitting on top of the DLQR, improves the nominal benchmark by
-> another 3.3% (0.967 ratio) while staying inside the 0.5% tie band on all
-> five robustness scenarios.  Its peak RF excursion is 165 Hz against a 950 Hz
-> actuator limit.  Promoted checkpoint:
-> `models/cfc_residual_m11_promoted.json`.  A self-contained C reference
-> implementation in `c_export/` matches the Python policy bit-for-bit across
-> 2006 test sequences.
+On the 100-second thermal-ramp benchmark the DLQR runs 11.55x quieter than the
+PI baseline at sigma_y(tau = 10 s).  A five-scenario adversarial battery
+confirms the DLQR keeps a positive win across every perturbation tested
+(1.77x to 36.71x speedups, 2.97x under a 5% twin miscalibration).  The
+learned controller is a bounded residual on top of the DLQR.  It improves the
+nominal benchmark by another 3.3% (a 0.967 sigma_y ratio versus DLQR) while
+staying inside a 0.5% tie band on all five robustness scenarios.  The
+residual is hard-clipped at 40 Hz so even when the learned correction
+saturates the controller never regresses below the DLQR; peak RF excursion in
+practice is 165 Hz against a 950 Hz actuator limit.
+
+The promoted controller is at `models/cfc_residual_m11_promoted.json` and
+ships with a self-contained C reference implementation in `c_export/` that
+matches the Python policy bit-for-bit across 2006 test sequences.
 
 ## What's in the repo
 
