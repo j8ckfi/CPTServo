@@ -31,11 +31,11 @@ transparency dip into an error signal whose slope tells the controller which
 way to nudge the local oscillator's RF frequency to stay on resonance.  The
 servo this project benchmarks is that lock loop.
 
-The metric the loop gets graded on is sigma_y(tau), the Allan deviation of
-fractional frequency error at integration time tau.  Lower is better; it's
-the standard way to compare clock stability.  Numbers in this README are at
-tau = 10 s, which is the window where thermal disturbances dominate on a
-chip-scale clock and where the published-data record is densest.
+The loop is graded on sigma_y(tau), the Allan deviation of fractional frequency
+error at integration time tau and the standard metric for comparing clock
+stability (lower values are better).  Numbers in this README are at
+tau = 10 s, the window where thermal disturbances dominate on a chip-scale
+clock and the published-data record is densest.
 
 A "disturbance recipe" is a perturbation profile applied during a run.
 `thermal_ramp` is the nominal benchmark, a package-temperature sinusoid that
@@ -70,7 +70,7 @@ scenario, the 3x out-of-distribution thermal slope, by 0.62%.  The DLQR is
 unconditional, so a learned controller that wins nominal but loses one
 robustness probe by under a percent is not promotion-worthy.
 
-The diagnosis was direct.  Under the 3x out-of-distribution thermal slope the
+Under the 3x out-of-distribution thermal slope the
 thermal-feedforward term triples because the temperature deviates 3x further
 from nominal, the RF action peaks at 163 Hz against the DLQR's 75 Hz, and the
 larger actuator excursion injects enough additional LO noise to push sigma_y
@@ -78,7 +78,7 @@ just outside the 0.5% tie band.  A feedforward tuned to the nominal slope is
 structurally over-aggressive on a 3x slope, and integral action cannot
 correct feedforward overshoot fast enough on a one-decimation timescale.
 
-The fix is to bound the residual.  The promoted controller computes the DLQR
+The promoted controller bounds the residual: it computes the DLQR
 action internally each step and adds a learned correction clipped to +-40 Hz:
 
 ```text
@@ -95,8 +95,7 @@ the order of 20 Hz, the clip is inactive, and the controller produces the
 full learned correction.  Under the 3x out-of-distribution thermal slope the
 residual peaks near 88 Hz, the clip activates, the peak actuator excursion
 drops from 163 Hz to 144 Hz, and sigma_y lands at a 1.00091 ratio versus the
-DLQR.  That is comfortably inside the tie band without changing the nominal
-result.
+DLQR, comfortably inside the tie band without changing the nominal result.
 
 The campaign that found the winning spec lives in
 `scripts/cfc_improvement_campaign.py` and searches a small structured space
@@ -109,8 +108,8 @@ the residual clip `residual_limit_Hz`.  Three campaign decisions matter:
     candidates cannot survive the top-K.  Survivors are ranked by nominal
     sigma_y(10 s) with small slack and headroom penalties as tiebreakers.
     An earlier soft-penalty version let "almost robust with great nominal"
-    candidates outrank "robust with good nominal" candidates, which is the
-    wrong objective for a hard-pass promotion rule.
+    candidates outrank "robust with good nominal" candidates.  The promotion
+    rule requires strict-minimax scoring instead.
 
 2.  A harder screen scenario than the benchmark uses.  The campaign screens
     against a 4x thermal-slope probe in addition to the benchmark's 3x.
@@ -127,12 +126,12 @@ The final search was an 8-candidate sweep around the best
 `(k_T, kp_scale, k_dT, residual_limit_Hz)` corner.  The winning point is
 `k_T = 1.5`, `kp_scale = 1.6`, `k_dT = -0.01`, `residual_limit_Hz = 40`.
 The `kp_scale` bump from 1.5 to 1.6 was counter-intuitive: more aggressive
-proportional gain on top of the DLQR should make out-of-distribution
-overshoot worse, not better.  Under the 40 Hz clip the math works in the
-opposite direction.  The clip absorbs the extra gain on the out-of-distribution
+proportional gain on top of the DLQR should worsen out-of-distribution
+overshoot.  Under the 40 Hz clip the math works in the opposite direction.
+The clip absorbs the extra gain on the out-of-distribution
 probe (where the residual saturates) while leaving it intact on the nominal
-probe (where the residual stays under 40 Hz).  Nominal improves; OOD stays
-bounded.  That asymmetry is what the clip buys, and the campaign found it by
+probe (where the residual stays under 40 Hz), so nominal performance improves
+and OOD excursion stays bounded.  The campaign found this specification by
 brute-force search rather than by hand-tuning.
 
 The end-to-end result, recorded in `data/gate_M11.json`:
@@ -169,7 +168,7 @@ somewhere in that gap.
 
 > If you have access to a chip-scale CPT-Rb87 clock module and want to point
 > this controller at one, please open an issue on this repo or reach out via
-> GitHub.  I would genuinely like to measure the sim-to-real gap, and the C
+> GitHub.  I would like to measure the sim-to-real gap, and the C
 > reference implementation under `c_export/` exists exactly for that purpose.
 
 ## Reproduction
